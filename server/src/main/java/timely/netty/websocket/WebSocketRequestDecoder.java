@@ -14,7 +14,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import timely.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import timely.TimelyConfiguration;
 import timely.api.request.AuthenticatedRequest;
 import timely.api.request.WebSocketRequest;
 import timely.api.response.TimelyException;
@@ -22,13 +25,18 @@ import timely.auth.AuthCache;
 import timely.subscription.SubscriptionRegistry;
 import timely.util.JsonUtil;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class WebSocketRequestDecoder extends MessageToMessageDecoder<WebSocketFrame> {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketRequestDecoder.class);
 
-    private final Configuration conf;
+    private final TimelyConfiguration conf;
 
-    public WebSocketRequestDecoder(Configuration conf) {
+    @Autowired
+    public WebSocketRequestDecoder(TimelyConfiguration conf) {
         this.conf = conf;
     }
 

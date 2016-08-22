@@ -9,10 +9,16 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.api.request.subscription.AddSubscription;
 import timely.subscription.Subscription;
 import timely.subscription.SubscriptionRegistry;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class WSAddSubscriptionRequestHandler extends SimpleChannelInboundHandler<AddSubscription> {
 
     private static final Logger LOG = LoggerFactory.getLogger(WSAddSubscriptionRequestHandler.class);

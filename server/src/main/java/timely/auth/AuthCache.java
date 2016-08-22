@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
-import timely.Configuration;
+import timely.TimelyConfiguration;
 import timely.api.request.AuthenticatedRequest;
 import timely.api.request.Request;
 import timely.api.response.TimelyException;
@@ -23,20 +23,20 @@ public class AuthCache {
 
     private static Cache<String, Authentication> CACHE = null;
 
-    private static Long sessionMaxAge = -1L;
+    private static int sessionMaxAge = -1;
 
     /**
      * For tests only
      */
     public static void resetSessionMaxAge() {
-        sessionMaxAge = -1L;
+        sessionMaxAge = -1;
     }
 
-    public static void setSessionMaxAge(Configuration config) {
+    public static void setSessionMaxAge(TimelyConfiguration config) {
         if (-1 != sessionMaxAge) {
             throw new IllegalStateException("Cache session max age already configured.");
         }
-        sessionMaxAge = Long.parseLong(config.get(Configuration.SESSION_MAX_AGE));
+        sessionMaxAge = config.getSessionMaxAge();
     }
 
     public static Cache<String, Authentication> getCache() {
@@ -56,9 +56,7 @@ public class AuthCache {
                 Collection<? extends GrantedAuthority> authorities = CACHE.asMap().get(sessionId).getAuthorities();
                 String[] auths = new String[authorities.size()];
                 final AtomicInteger i = new AtomicInteger(0);
-                authorities.forEach(a -> {
-                    auths[i.getAndIncrement()] = a.getAuthority();
-                });
+                authorities.forEach(a -> auths[i.getAndIncrement()] = a.getAuthority());
                 return new Authorizations(auths);
             } else {
                 return null;
@@ -68,8 +66,8 @@ public class AuthCache {
         }
     }
 
-    public static void enforceAccess(Configuration conf, Request r) throws Exception {
-        if (!conf.getBoolean(Configuration.ALLOW_ANONYMOUS_ACCESS) && (r instanceof AuthenticatedRequest)) {
+    public static void enforceAccess(TimelyConfiguration conf, Request r) throws Exception {
+        if (!conf.isAllowAnonymousAccess() && (r instanceof AuthenticatedRequest)) {
             AuthenticatedRequest ar = (AuthenticatedRequest) r;
             if (StringUtils.isEmpty(ar.getSessionId())) {
                 throw new TimelyException(HttpResponseStatus.UNAUTHORIZED.code(), "User must log in",

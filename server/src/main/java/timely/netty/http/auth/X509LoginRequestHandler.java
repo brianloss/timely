@@ -5,16 +5,25 @@ import io.netty.handler.ssl.SslHandler;
 
 import java.security.cert.X509Certificate;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
+import org.springframework.stereotype.Component;
 import timely.Configuration;
+import timely.TimelyConfiguration;
 import timely.api.request.auth.X509LoginRequest;
 import timely.auth.AuthenticationService;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class X509LoginRequestHandler extends TimelyLoginRequestHandler<X509LoginRequest> {
 
-    public X509LoginRequestHandler(Configuration conf) {
+    @Autowired
+    public X509LoginRequestHandler(TimelyConfiguration conf) {
         super(conf);
     }
 

@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 
 import timely.Configuration;
+import timely.TimelyConfiguration;
 import timely.auth.AuthCache;
 import timely.netty.Constants;
 import timely.netty.http.TimelyHttpHandler;
@@ -30,12 +31,9 @@ public abstract class TimelyLoginRequestHandler<T> extends SimpleChannelInboundH
     private long maxAge = Configuration.SESSION_MAX_AGE_DEFAULT;
     private String domain = null;
 
-    public TimelyLoginRequestHandler(Configuration conf) {
-        String ma = conf.get(Configuration.SESSION_MAX_AGE);
-        if (null != ma) {
-            maxAge = Long.parseLong(ma);
-        }
-        domain = conf.get(Configuration.TIMELY_HTTP_HOST);
+    public TimelyLoginRequestHandler(TimelyConfiguration conf) {
+        maxAge = conf.getSessionMaxAge();
+        domain = conf.getHttp().getHost();
     }
 
     @Override

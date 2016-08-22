@@ -11,9 +11,15 @@ import io.netty.handler.codec.http.HttpVersion;
 
 import java.nio.charset.StandardCharsets;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.api.request.VersionRequest;
 import timely.netty.Constants;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class HttpVersionRequestHandler extends SimpleChannelInboundHandler<VersionRequest> implements TimelyHttpHandler {
 
     @Override

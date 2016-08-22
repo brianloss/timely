@@ -1,6 +1,8 @@
 package timely.netty.tcp;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -12,9 +14,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.api.annotation.AnnotationResolver;
 import timely.api.request.TcpRequest;
 
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class TcpDecoder extends ByteToMessageDecoder {
 
     private static final Logger LOG = LoggerFactory.getLogger(TcpDecoder.class);

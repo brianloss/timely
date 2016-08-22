@@ -16,7 +16,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import timely.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import timely.TimelyConfiguration;
 import timely.api.annotation.AnnotationResolver;
 import timely.api.request.AuthenticatedRequest;
 import timely.api.request.HttpGetRequest;
@@ -27,6 +30,10 @@ import timely.api.response.TimelyException;
 import timely.auth.AuthCache;
 import timely.netty.Constants;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class HttpRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> implements TimelyHttpHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpRequestDecoder.class);
@@ -34,14 +41,15 @@ public class HttpRequestDecoder extends MessageToMessageDecoder<FullHttpRequest>
     private static final String LOG_PARSED_REQUEST = "Parsed request {}";
     private static final String NO_AUTHORIZATIONS = "";
 
-    private final Configuration conf;
+    private final TimelyConfiguration conf;
     private boolean anonymousAccessAllowed = false;
     private final String nonSecureRedirectAddress;
 
-    public HttpRequestDecoder(Configuration config) {
+    @Autowired
+    public HttpRequestDecoder(TimelyConfiguration config) {
         this.conf = config;
-        this.anonymousAccessAllowed = conf.getBoolean(Configuration.ALLOW_ANONYMOUS_ACCESS);
-        this.nonSecureRedirectAddress = conf.get(Configuration.NON_SECURE_REDIRECT_PATH);
+        this.anonymousAccessAllowed = config.isAllowAnonymousAccess();
+        this.nonSecureRedirectAddress = config.getHttp().getRedirectPath();
     }
 
     public static String getSessionId(FullHttpRequest msg, boolean anonymousAccessAllowed) {

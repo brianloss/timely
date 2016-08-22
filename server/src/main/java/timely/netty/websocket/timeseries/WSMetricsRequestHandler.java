@@ -2,22 +2,28 @@ package timely.netty.websocket.timeseries;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import timely.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.api.request.timeseries.MetricsRequest;
 import timely.api.response.timeseries.MetricsResponse;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class WSMetricsRequestHandler extends SimpleChannelInboundHandler<MetricsRequest> {
 
-    private Configuration conf = null;
+    private final MetricsResponse response;
 
-    public WSMetricsRequestHandler(Configuration conf) {
-        this.conf = conf;
+    @Autowired
+    public WSMetricsRequestHandler(MetricsResponse response) {
+        this.response = response;
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, MetricsRequest m) throws Exception {
-        MetricsResponse r = new MetricsResponse(conf);
-        ctx.writeAndFlush(r.toWebSocketResponse("application/json"));
+        ctx.writeAndFlush(response.toWebSocketResponse("application/json"));
     }
 
 }

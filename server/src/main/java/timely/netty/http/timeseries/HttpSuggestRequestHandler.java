@@ -12,6 +12,9 @@ import io.netty.handler.codec.http.HttpVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.api.request.timeseries.SuggestRequest;
 import timely.api.response.TimelyException;
 import timely.netty.Constants;
@@ -19,18 +22,23 @@ import timely.netty.http.TimelyHttpHandler;
 import timely.store.DataStore;
 import timely.util.JsonUtil;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class HttpSuggestRequestHandler extends SimpleChannelInboundHandler<SuggestRequest> implements TimelyHttpHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpSuggestRequestHandler.class);
     private final DataStore dataStore;
 
+    @Autowired
     public HttpSuggestRequestHandler(DataStore dataStore) {
         this.dataStore = dataStore;
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, SuggestRequest msg) throws Exception {
-        byte[] buf = null;
+        byte[] buf;
         try {
             buf = JsonUtil.getObjectMapper().writeValueAsBytes(dataStore.suggest(msg));
         } catch (TimelyException e) {

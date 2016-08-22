@@ -13,18 +13,26 @@ import io.netty.handler.ssl.NotSslRecordException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import timely.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import timely.TimelyConfiguration;
 import timely.netty.Constants;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class NonSecureHttpHandler extends ChannelInboundHandlerAdapter implements TimelyHttpHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(NonSecureHttpHandler.class);
     private final String redirectAddress;
 
-    public NonSecureHttpHandler(Configuration conf) {
-        String timelyHost = conf.get(Configuration.TIMELY_HTTP_HOST);
-        String timelyPort = conf.get(Configuration.QUERY_PORT);
-        String path = conf.get(Configuration.NON_SECURE_REDIRECT_PATH);
+    @Autowired
+    public NonSecureHttpHandler(TimelyConfiguration conf) {
+        String timelyHost = conf.getHttp().getHost();
+        int timelyPort = conf.getPort().getQuery();
+        String path = conf.getHttp().getRedirectPath();
         redirectAddress = "https://" + timelyHost + ":" + timelyPort + path;
     }
 

@@ -3,18 +3,26 @@ package timely.netty.http;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.Configuration;
+import timely.TimelyConfiguration;
 import timely.api.response.StrictTransportResponse;
 import timely.api.response.TimelyException;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class StrictTransportHandler extends SimpleChannelInboundHandler<StrictTransportResponse> {
 
     public static final String HSTS_HEADER_NAME = "Strict-Transport-Security";
     private String hstsMaxAge = "max-age=";
 
-    public StrictTransportHandler(Configuration conf) {
-        String maxAge = conf.get(Configuration.STRICT_TRANSPORT_MAX_AGE);
-        hstsMaxAge = "max-age=" + maxAge;
+    @Autowired
+    public StrictTransportHandler(TimelyConfiguration conf) {
+        hstsMaxAge = "max-age=" + conf.getHttp().getStrictTransportMaxAge();
     }
 
     @Override

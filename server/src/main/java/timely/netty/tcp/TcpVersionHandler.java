@@ -6,8 +6,14 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 import java.nio.charset.StandardCharsets;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.api.request.VersionRequest;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class TcpVersionHandler extends SimpleChannelInboundHandler<VersionRequest> {
 
     @Override

@@ -1,6 +1,6 @@
 package timely.store;
 
-import timely.Configuration;
+import timely.TimelyConfiguration;
 
 public class MetaCacheFactory {
 
@@ -14,13 +14,12 @@ public class MetaCacheFactory {
         }
     }
 
-    public static final synchronized MetaCache getCache(Configuration conf) {
+    public static final synchronized MetaCache getCache(TimelyConfiguration conf) {
         if (null == cache || cache.isClosed()) {
             if (null == conf) {
                 throw new RuntimeException("Configuration cannot be null");
             }
-            cache = new MetaCacheImpl();
-            cache.init(conf);
+            cache = new MetaCacheImpl(conf);
         }
         return cache;
     }

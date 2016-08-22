@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import timely.Configuration;
+import timely.TimelyConfiguration;
 import timely.api.response.TimelyException;
 import timely.store.DataStore;
 
@@ -28,21 +28,17 @@ public class Subscription {
     private final String subscriptionId;
 
     public Subscription(String subscriptionId, String sessionId, DataStore store, ChannelHandlerContext ctx,
-            Configuration conf) {
+            TimelyConfiguration conf) {
         this.subscriptionId = subscriptionId;
         this.sessionId = sessionId;
         this.store = store;
         this.ctx = ctx;
-        this.lag = Integer.parseInt(conf.get(Configuration.WS_SUBSCRIPTION_LAG));
+        this.lag = conf.getWebSocket().getSubscriptionLag();
         // send a websocket ping at half the timeout interval.
-        int rate = (Integer.parseInt(conf.get(Configuration.WS_TIMEOUT_SECONDS)) / 2);
-        this.ping = this.ctx.executor().scheduleAtFixedRate(new Runnable() {
-
-            @Override
-            public void run() {
-                LOG.trace("Sending ping on channel {}", ctx.channel());
-                ctx.writeAndFlush(new PingWebSocketFrame());
-            }
+        int rate = (conf.getWebSocket().getTimeout() / 2);
+        this.ping = this.ctx.executor().scheduleAtFixedRate(() -> {
+            LOG.trace("Sending ping on channel {}", ctx.channel());
+            ctx.writeAndFlush(new PingWebSocketFrame());
         }, rate, rate, TimeUnit.SECONDS);
     }
 

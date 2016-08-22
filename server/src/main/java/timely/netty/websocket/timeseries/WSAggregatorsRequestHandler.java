@@ -3,10 +3,16 @@ package timely.netty.websocket.timeseries;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.api.request.timeseries.AggregatorsRequest;
 import timely.api.response.timeseries.AggregatorsResponse;
 import timely.util.JsonUtil;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class WSAggregatorsRequestHandler extends SimpleChannelInboundHandler<AggregatorsRequest> {
 
     @Override

@@ -8,12 +8,18 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaders.Names;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.api.request.timeseries.AggregatorsRequest;
 import timely.api.response.timeseries.AggregatorsResponse;
 import timely.netty.Constants;
 import timely.netty.http.TimelyHttpHandler;
 import timely.util.JsonUtil;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class HttpAggregatorsRequestHandler extends SimpleChannelInboundHandler<AggregatorsRequest> implements
         TimelyHttpHandler {
 

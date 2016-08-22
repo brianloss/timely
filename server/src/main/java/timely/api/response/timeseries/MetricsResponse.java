@@ -18,16 +18,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.http.MediaType;
 
-import timely.Configuration;
+import org.springframework.stereotype.Component;
+import timely.TimelyConfiguration;
 import timely.api.model.Meta;
 import timely.netty.Constants;
 import timely.store.MetaCache;
-import timely.store.MetaCacheFactory;
 import timely.util.JsonUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -36,6 +37,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class MetricsResponse {
 
     private static final Logger LOG = LoggerFactory.getLogger(MetricsResponse.class);
@@ -61,21 +66,13 @@ public class MetricsResponse {
     private static final String TD_START = "<td>";
     private static final String TD_END = "</td>\n";
 
+    private final MetaCache metaCache;
     private Set<String> ignoredTags = Collections.emptySet();
-    private Configuration conf = null;
 
-    public MetricsResponse() {
-    }
-
-    public MetricsResponse(Configuration conf) {
-        String tagsToIgnore = conf.get(Configuration.METRICS_IGNORED_TAGS);
-        if (!StringUtils.isEmpty(tagsToIgnore)) {
-            this.ignoredTags = new HashSet<>();
-            for (String tag : tagsToIgnore.split(",")) {
-                ignoredTags.add(tag);
-            }
-        }
-        this.conf = conf;
+    @Autowired
+    public MetricsResponse(TimelyConfiguration conf, MetaCache metaCache) {
+        this.metaCache = metaCache;
+        ignoredTags = new HashSet<>(conf.getMetricsReportIgnoredTags());
     }
 
     public TextWebSocketFrame toWebSocketResponse(String acceptHeader) throws Exception {
@@ -141,9 +138,8 @@ public class MetricsResponse {
     }
 
     protected StringBuilder generateHtml() {
-        final MetaCache cache = MetaCacheFactory.getCache(conf);
         TreeSet<Meta> tree = new TreeSet<>();
-        cache.forEach(m -> tree.add(m));
+        metaCache.forEach(m -> tree.add(m));
         final StringBuilder b = new StringBuilder();
         b.append(DOCTYPE);
         b.append(HTML_START);
@@ -192,9 +188,8 @@ public class MetricsResponse {
 
     protected String generateJson(final ObjectMapper mapper) throws JsonProcessingException {
         // map non-ignored metrics to their list of tags
-        final MetaCache cache = MetaCacheFactory.getCache(conf);
         Map<String, List<JsonNode>> metricTagMap = new HashMap<>();
-        cache.forEach(m -> {
+        metaCache.forEach(m -> {
             if (!metricTagMap.containsKey(m.getMetric())) {
                 metricTagMap.put(m.getMetric(), new ArrayList<>());
             }

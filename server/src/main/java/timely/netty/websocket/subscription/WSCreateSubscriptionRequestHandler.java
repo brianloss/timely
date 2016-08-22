@@ -8,19 +8,28 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.Configuration;
+import timely.TimelyConfiguration;
 import timely.api.request.subscription.CreateSubscription;
 import timely.store.DataStore;
 import timely.subscription.Subscription;
 import timely.subscription.SubscriptionRegistry;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class WSCreateSubscriptionRequestHandler extends SimpleChannelInboundHandler<CreateSubscription> {
 
     private static final Logger LOG = LoggerFactory.getLogger(WSCreateSubscriptionRequestHandler.class);
     private final DataStore store;
-    private final Configuration conf;
+    private final TimelyConfiguration conf;
 
-    public WSCreateSubscriptionRequestHandler(DataStore store, Configuration conf) {
+    @Autowired
+    public WSCreateSubscriptionRequestHandler(DataStore store, TimelyConfiguration conf) {
         this.store = store;
         this.conf = conf;
     }

@@ -9,18 +9,27 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.Configuration;
+import timely.TimelyConfiguration;
 import timely.netty.http.HttpRequestDecoder;
 import timely.subscription.SubscriptionRegistry;
 
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class WebSocketHttpCookieHandler extends MessageToMessageCodec<FullHttpRequest, FullHttpRequest> {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketHttpCookieHandler.class);
     private boolean anonymousAccessAllowed;
 
-    public WebSocketHttpCookieHandler(Configuration config) {
+    @Autowired
+    public WebSocketHttpCookieHandler(TimelyConfiguration config) {
         super();
-        this.anonymousAccessAllowed = config.getBoolean(Configuration.ALLOW_ANONYMOUS_ACCESS);
+        this.anonymousAccessAllowed = config.isAllowAnonymousAccess();
     }
 
     @Override

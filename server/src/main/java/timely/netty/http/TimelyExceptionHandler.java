@@ -7,9 +7,11 @@ import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.springframework.stereotype.Component;
 import timely.api.response.TimelyException;
 
 @Sharable
+@Component
 public class TimelyExceptionHandler extends SimpleChannelInboundHandler<TimelyException> implements TimelyHttpHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(TimelyExceptionHandler.class);

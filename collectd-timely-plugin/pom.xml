@@ -98,18 +98,6 @@
             <plugin>
                 <groupId>net.revelc.code</groupId>
                 <artifactId>formatter-maven-plugin</artifactId>
-                <configuration>
-                    <configFile>${project.parent.basedir}/eclipse/Eclipse-Formatter.xml</configFile>
-                    <lineEnding>LF</lineEnding>
-                    <overrideConfigCompilerVersion>true</overrideConfigCompilerVersion>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>format</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

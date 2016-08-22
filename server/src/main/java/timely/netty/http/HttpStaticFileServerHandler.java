@@ -33,6 +33,8 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_MODIFIED;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -68,6 +70,8 @@ import javax.activation.MimetypesFileTypeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import timely.netty.Constants;
 
 /**
@@ -115,6 +119,8 @@ import timely.netty.Constants;
  *
  * </pre>
  */
+@Component
+@Scope(SCOPE_PROTOTYPE)
 public class HttpStaticFileServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> implements
         TimelyHttpHandler {
 

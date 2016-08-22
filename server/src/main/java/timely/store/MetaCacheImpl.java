@@ -4,23 +4,28 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
-import timely.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import timely.TimelyConfiguration;
 import timely.api.model.Meta;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
+import javax.annotation.PreDestroy;
+
+@Component
 public class MetaCacheImpl implements MetaCache {
 
     private static final Object DUMMY = new Object();
     private volatile boolean closed = false;
     private Cache<Meta, Object> cache = null;
 
-    @Override
-    public void init(Configuration config) {
-        long defaultExpiration = Long.parseLong(config.get(Configuration.META_CACHE_EXPIRATION));
-        int initialCapacity = Integer.parseInt(config.get(Configuration.META_CACHE_INITIAL_CAPACITY));
-        long maxCapacity = Long.parseLong(config.get(Configuration.META_CACHE_MAX_CAPACITY));
+    @Autowired
+    public MetaCacheImpl(TimelyConfiguration config) {
+        long defaultExpiration = config.getMetaCache().getExpirationMinutes();
+        int initialCapacity = config.getMetaCache().getInitialCapacity();
+        long maxCapacity = config.getMetaCache().getMaxCapacity();
         cache = Caffeine.newBuilder().expireAfterAccess(defaultExpiration, TimeUnit.MINUTES)
                 .initialCapacity(initialCapacity).maximumSize(maxCapacity).build();
     }
@@ -46,6 +51,7 @@ public class MetaCacheImpl implements MetaCache {
     }
 
     @Override
+    @PreDestroy
     public void close() {
         this.closed = true;
     }

@@ -1,6 +1,14 @@
 <?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.4.0.RELEASE</version>
+        <relativePath />
+    </parent>
+
     <groupId>timely</groupId>
     <artifactId>timely</artifactId>
     <version>0.0.3-SNAPSHOT</version>
@@ -30,15 +38,13 @@
         <module>grafana</module>
     </modules>
     <properties>
+        <java.version>1.8</java.version>
+
         <!-- Configure the os-maven-plugin extension to expand the classifier on -->
         <!-- Fedora-"like" systems. -->
         <os.detection.classifierWithLikes>fedora</os.detection.classifierWithLikes>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- dependency versions -->
         <collectd-api-jar>/usr/share/collectd/java/collectd-api.jar</collectd-api-jar>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <version.accumulo>1.7.0</version.accumulo>
         <version.caffeine>2.2.0</version.caffeine>
         <version.collectd>5.5.1</version.collectd>
@@ -52,26 +58,16 @@
         <version.javassist>3.20.0-GA</version.javassist>
         <version.jcip-annotations>1.0</version.jcip-annotations>
         <version.junit>4.11</version.junit>
-        <version.log4j>2.5</version.log4j>
         <version.netty>4.0.38.Final</version.netty>
         <version.netty-tcnative>1.1.33.Fork18</version.netty-tcnative>
         <version.powermock>1.6.4</version.powermock>
-        <version.security>4.0.4.RELEASE</version.security>
-        <version.slf4j>1.7.12</version.slf4j>
         <!-- plugin versions -->
         <version.eclipse-lifecycle>1.0.0</version.eclipse-lifecycle>
         <version.findbugs-maven>3.0.3</version.findbugs-maven>
         <version.formatter>0.5.2</version.formatter>
         <version.jacoco>0.7.6.201602180812</version.jacoco>
-        <version.maven-assembly>2.6</version.maven-assembly>
-        <version.maven-compiler>3.3</version.maven-compiler>
-        <version.maven-dependency>2.10</version.maven-dependency>
-        <version.maven-jar>3.0.1</version.maven-jar>
         <version.os-maven>1.5.0.Final</version.os-maven>
-        <version.maven-pmd>3.6</version.maven-pmd>
         <version.maven-rpm>2.1.4</version.maven-rpm>
-        <version.maven-shade>2.4.2</version.maven-shade>
-        <version.maven-surefire>2.19.1</version.maven-surefire>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -146,24 +142,6 @@
 	            <version>${version.jcip-annotations}</version>
 	            <scope>test</scope>
 	        </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-api</artifactId>
-                <version>${version.log4j}</version>
-                <scope>runtime</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-core</artifactId>
-                <version>${version.log4j}</version>
-                <scope>runtime</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-slf4j-impl</artifactId>
-                <version>${version.log4j}</version>
-                <scope>runtime</scope>
-            </dependency>
             <dependency>
                 <groupId>org.apache.accumulo</groupId>
                 <artifactId>accumulo-core</artifactId>
@@ -264,21 +242,6 @@
 	            <classifier>full</classifier>
 	            <scope>test</scope>
 	        </dependency>
-            <dependency>
-                <groupId>org.springframework.security</groupId>
-                <artifactId>spring-security-config</artifactId>
-                <version>${version.security}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.security</groupId>
-                <artifactId>spring-security-web</artifactId>
-                <version>${version.security}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${version.slf4j}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
     <build>
@@ -288,46 +251,30 @@
 	                <groupId>net.revelc.code</groupId>
 	                <artifactId>formatter-maven-plugin</artifactId>
 	                <version>${version.formatter}</version>
-				</plugin>            
-	            <plugin>
-	                <groupId>org.apache.maven.plugins</groupId>
-	                <artifactId>maven-assembly-plugin</artifactId>
-	                <version>${version.maven-assembly}</version>
-	            </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>${version.maven-compiler}</version>
                     <configuration>
-                        <source>${maven.compiler.source}</source>
-                        <target>${maven.compiler.target}</target>
+                        <configFile>${project.parent.basedir}/eclipse/Eclipse-Formatter.xml</configFile>
+                        <lineEnding>LF</lineEnding>
+                        <overrideConfigCompilerVersion>true</overrideConfigCompilerVersion>
                     </configuration>
-                </plugin>
-	            <plugin>
-	                <groupId>org.apache.maven.plugins</groupId>
-	                <artifactId>maven-dependency-plugin</artifactId>
-	                <version>${version.maven-dependency}</version>
-	            </plugin>
-	            <plugin>
-	                <groupId>org.apache.maven.plugins</groupId>
-	                <artifactId>maven-failsafe-plugin</artifactId>
-	                <version>${version.maven-surefire}</version>
-	            </plugin>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>format</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+				</plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>${version.maven-jar}</version>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-maven-plugin</artifactId>
+                            <version>1.4.0.RELEASE</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
-                <plugin>
-                	<groupId>org.apache.maven.plugins</groupId>
-                	<artifactId>maven-shade-plugin</artifactId>
-                	<version>${version.maven-shade}</version>
-                </plugin>
-	            <plugin>
-	                <groupId>org.apache.maven.plugins</groupId>
-	                <artifactId>maven-surefire-plugin</artifactId>
-	                <version>${version.maven-surefire}</version>
-	            </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>findbugs-maven-plugin</artifactId>

@@ -1,8 +1,5 @@
 package timely;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.Connector;
@@ -14,42 +11,23 @@ import org.apache.accumulo.minicluster.MiniAccumuloConfig;
 import org.apache.accumulo.minicluster.ServerType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.stereotype.Component;
+import timely.server.ServerFactory;
 
-public class StandaloneServer extends Server {
+import java.io.File;
+import java.io.IOException;
+
+@Component
+@SpringBootApplication(scanBasePackageClasses = { TimelyConfiguration.class, ServerFactory.class })
+public class StandaloneServer {
 
     private static final Logger LOG = LoggerFactory.getLogger(StandaloneServer.class);
-
-    private static MiniAccumuloCluster mac = null;
-
-    public StandaloneServer(File conf) throws Exception {
-        super(conf);
-    }
-
-    @Override
-    public void shutdown() {
-        try {
-            mac.stop();
-            LOG.info("MiniAccumuloCluster shutdown.");
-        } catch (IOException | InterruptedException e) {
-            System.err.println("Error stopping MiniAccumuloCluster");
-            e.printStackTrace();
-        }
-        super.shutdown();
-    }
-
-    private static String usage() {
-        return "StandaloneServer <configFile> <directory>";
-    }
+    private static MiniAccumuloCluster mac;
 
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.err.println(usage());
-        }
-        final File conf = new File(args[0]);
-        if (!conf.canRead()) {
-            throw new RuntimeException("Configuration file does not exist or cannot be read");
-        }
-        File tmp = new File(args[1]);
+        File tmp = new File(args[0]);
         if (!tmp.canWrite()) {
             System.err.println("Unable to write to directory: " + tmp);
             System.exit(1);
@@ -81,19 +59,27 @@ public class StandaloneServer extends Server {
             System.err.println("Error configuring root user");
             System.exit(1);
         }
-        try {
-            LOG.info("Starting StandaloneServer");
-            new StandaloneServer(conf);
-        } catch (Exception e) {
-            System.err.println("Error starting server");
-            e.printStackTrace();
-            System.exit(1);
-        }
-        try {
-            LATCH.await();
-        } catch (InterruptedException e) {
-            LOG.info("Server shutting down.");
-        }
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+
+            @Override
+            public void run() {
+                StandaloneServer.shutdown();
+            }
+        });
+
+        new SpringApplicationBuilder(StandaloneServer.class).web(false).run(args);
     }
 
+    public static void shutdown() {
+        try {
+            if (mac != null) {
+                mac.stop();
+                LOG.info("MiniAccumuloCluster shutdown.");
+            }
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Error stopping MiniAccumuloCluster");
+            e.printStackTrace();
+        }
+    }
 }

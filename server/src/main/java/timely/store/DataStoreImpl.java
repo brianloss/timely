@@ -50,7 +50,6 @@ import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.PartialKey;
 import org.apache.accumulo.core.data.Range;
-import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
 import org.apache.accumulo.core.iterators.user.AgeOffFilter;
 import org.apache.accumulo.core.iterators.user.RegExFilter;
@@ -62,8 +61,11 @@ import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import timely.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Repository;
 import timely.Server;
+import timely.TimelyConfiguration;
 import timely.api.model.Meta;
 import timely.api.model.Metric;
 import timely.api.model.Tag;
@@ -85,6 +87,7 @@ import timely.sample.Sample;
 import timely.sample.iterators.DownsampleIterator;
 import timely.util.MetaKeySet;
 
+@Repository
 public class DataStoreImpl implements DataStore {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataStoreImpl.class);
@@ -113,9 +116,8 @@ public class DataStoreImpl implements DataStore {
 
     }
 
-    Configuration conf;
     private final Connector connector;
-    private MetaCache metaCache = null;
+    private final MetaCache metaCache;
     private final AtomicLong lastCountTime = new AtomicLong(System.currentTimeMillis());
     private final AtomicReference<SortedMap<MetricTagK, Integer>> metaCounts = new AtomicReference<>(new TreeMap<>());
     private final String metricsTable;
@@ -129,31 +131,36 @@ public class DataStoreImpl implements DataStore {
     private final ThreadLocal<BatchWriter> batchWriter = new ThreadLocal<>();
     private boolean anonAccessAllowed = false;
 
-    public DataStoreImpl(Configuration conf, int numWriteThreads) throws TimelyException {
+    @Autowired
+    public DataStoreImpl(TimelyConfiguration conf, MetaCache metaCache,
+            @Value("${io.netty.eventLoopThreads:0}") int numWriteThreads) throws TimelyException {
 
         try {
+            if (numWriteThreads <= 0) {
+                numWriteThreads = Runtime.getRuntime().availableProcessors() * 2;
+            }
             final BaseConfiguration apacheConf = new BaseConfiguration();
-            apacheConf.setProperty("instance.name", conf.get(Configuration.INSTANCE_NAME));
-            apacheConf.setProperty("instance.zookeeper.host", conf.get(Configuration.ZOOKEEPERS));
+            apacheConf.setProperty("instance.name", conf.getInstanceName());
+            apacheConf.setProperty("instance.zookeeper.host", conf.getZookeepers());
             final ClientConfiguration aconf = new ClientConfiguration(Collections.singletonList(apacheConf));
             final Instance instance = new ZooKeeperInstance(aconf);
-            final byte[] passwd = conf.get(Configuration.PASSWORD).getBytes(UTF_8);
-            connector = instance.getConnector(conf.get(Configuration.USERNAME), new PasswordToken(passwd));
+            final byte[] passwd = conf.getPassword().getBytes(UTF_8);
+            connector = instance.getConnector(conf.getUsername(), new PasswordToken(passwd));
             bwConfig = new BatchWriterConfig();
-            bwConfig.setMaxLatency(getTimeInMillis(conf.get(Configuration.MAX_LATENCY)), TimeUnit.MILLISECONDS);
-            bwConfig.setMaxMemory(getMemoryInBytes(conf.get(Configuration.WRITE_BUFFER_SIZE)) / numWriteThreads);
-            bwConfig.setMaxWriteThreads(Integer.parseInt(conf.get(Configuration.WRITE_THREADS)));
-            scannerThreads = Integer.parseInt(conf.get(Configuration.SCANNER_THREADS));
-            anonAccessAllowed = conf.getBoolean(Configuration.ALLOW_ANONYMOUS_ACCESS);
+            bwConfig.setMaxLatency(getTimeInMillis(conf.getWrite().getLatency()), TimeUnit.MILLISECONDS);
+            bwConfig.setMaxMemory(getMemoryInBytes(conf.getWrite().getBufferSize()) / Math.max(1, numWriteThreads));
+            bwConfig.setMaxWriteThreads(conf.getWrite().getThreads());
+            scannerThreads = conf.getScanner().getThreads();
+            anonAccessAllowed = conf.isAllowAnonymousAccess();
 
-            String ageoff = Long.toString(Integer.parseInt(conf.get(Configuration.METRICS_AGEOFF_DAYS)) * 86400000L);
+            String ageoff = Long.toString(conf.getMetricAgeOffDays() * 86400000L);
             Map<String, String> ageOffOptions = new HashMap<>();
             ageOffOptions.put("ttl", ageoff);
             IteratorSetting ageOffIteratorSettings = new IteratorSetting(100, "ageoff", AgeOffFilter.class,
                     ageOffOptions);
             EnumSet<IteratorScope> ageOffIteratorScope = EnumSet.allOf(IteratorScope.class);
 
-            metricsTable = conf.get(Configuration.METRICS_TABLE);
+            metricsTable = conf.getTable();
             if (metricsTable.contains(".")) {
                 final String[] parts = metricsTable.split("\\.", 2);
                 final String namespace = parts[0];
@@ -184,7 +191,7 @@ public class DataStoreImpl implements DataStore {
                     }
                 }
             }
-            metaTable = conf.get(Configuration.META_TABLE);
+            metaTable = conf.getMeta();
             if (!tableIdMap.containsKey(metaTable)) {
                 try {
                     LOG.info("Creating table " + metaTable);
@@ -209,7 +216,7 @@ public class DataStoreImpl implements DataStore {
                 }
 
             }, METRICS_PERIOD, METRICS_PERIOD);
-            this.metaCache = MetaCacheFactory.getCache(conf);
+            this.metaCache = metaCache;
         } catch (Exception e) {
             throw new TimelyException(HttpResponseStatus.INTERNAL_SERVER_ERROR.code(), "Error creating DataStoreImpl",
                     e.getMessage(), e);
@@ -351,7 +358,7 @@ public class DataStoreImpl implements DataStore {
                 Scanner scanner = connector.createScanner(metaTable, Authorizations.EMPTY);
                 scanner.setRange(range);
                 List<String> metrics = new ArrayList<>();
-                for (Entry<Key, Value> metric : scanner) {
+                for (Entry<Key, org.apache.accumulo.core.data.Value> metric : scanner) {
                     metrics.add(metric.getKey().getRow().toString().substring(Meta.METRIC_PREFIX.length()));
                     if (metrics.size() >= request.getMax()) {
                         break;
@@ -401,7 +408,7 @@ public class DataStoreImpl implements DataStore {
             scanner.setRange(range);
             // TODO compute columns to fetch
             int total = 0;
-            for (Entry<Key, Value> entry : scanner) {
+            for (Entry<Key, org.apache.accumulo.core.data.Value> entry : scanner) {
                 Meta metaEntry = Meta.parse(entry.getKey(), entry.getValue());
                 if (matches(metaEntry.getTagKey(), metaEntry.getTagValue(), tags)) {
                     if (resultField.size() < msg.getLimit()) {
@@ -460,7 +467,7 @@ public class DataStoreImpl implements DataStore {
                     DownsampleIterator.setDownsampleOptions(is, startTs, endTs, downsample, aggClass.getName());
                     scanner.addScanIterator(is);
                     // tag -> array of results by period starting at start
-                    for (Entry<Key, Value> encoded : scanner) {
+                    for (Entry<Key, org.apache.accumulo.core.data.Value> encoded : scanner) {
                         Map<Set<Tag>, Downsample> samples = DownsampleIterator.decodeValue(encoded.getValue());
                         for (Entry<Set<Tag>, Downsample> entry : samples.entrySet()) {
                             Set<Tag> key = new HashSet<>();
@@ -607,7 +614,7 @@ public class DataStoreImpl implements DataStore {
             onlyFirstRow = true;
         }
         final boolean ONLY_RETURN_FIRST_TAG = onlyFirstRow;
-        Iterator<Entry<Key, Value>> iter = meta.iterator();
+        Iterator<Entry<Key, org.apache.accumulo.core.data.Value>> iter = meta.iterator();
         Iterator<Pair<String, String>> knownKeyValues = new Iterator<Pair<String, String>>() {
 
             Text firstTag = null;
@@ -617,7 +624,7 @@ public class DataStoreImpl implements DataStore {
             @Override
             public boolean hasNext() {
                 if (iter.hasNext()) {
-                    Entry<Key, Value> metaEntry = iter.next();
+                    Entry<Key, org.apache.accumulo.core.data.Value> metaEntry = iter.next();
                     if (null == firstTag) {
                         firstTag = metaEntry.getKey().getColumnFamily();
                     }
