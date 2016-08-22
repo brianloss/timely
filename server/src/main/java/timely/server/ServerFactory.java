@@ -54,6 +54,7 @@ public class ServerFactory {
     private static final String WS_PATH = "/websocket";
 
     @Bean(name = "putBuilder")
+    @Scope(SCOPE_PROTOTYPE)
     public PipelineBuilder putBuilder() {
         return new PipelineBuilder() {
 
@@ -76,6 +77,7 @@ public class ServerFactory {
     }
 
     @Bean(name = "queryBuilder")
+    @Scope(SCOPE_PROTOTYPE)
     public PipelineBuilder queryBuilder() {
         return new PipelineBuilder() {
 
@@ -160,6 +162,7 @@ public class ServerFactory {
     }
 
     @Bean(name = "websocketBuilder")
+    @Scope(SCOPE_PROTOTYPE)
     public PipelineBuilder websocketBuilder() {
         return new PipelineBuilder() {
 
