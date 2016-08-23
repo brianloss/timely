@@ -7,6 +7,7 @@ import java.util.Properties;
 import timely.Configuration;
 
 import com.google.common.io.Files;
+import timely.TimelyConfiguration;
 
 public class TestConfiguration extends Properties {
 
@@ -32,6 +33,23 @@ public class TestConfiguration extends Properties {
         cfg.put(Configuration.SSL_USE_GENERATED_KEYPAIR, "true");
         cfg.put(Configuration.MAX_LATENCY, "2s");
         cfg.put(Configuration.WS_TIMEOUT_SECONDS, "20");
+        return cfg;
+    }
+
+    public static TimelyConfiguration createMinimalTimelyConfigurationForTest() {
+        TimelyConfiguration cfg = new TimelyConfiguration();
+        cfg.setIp("127.0.0.1");
+        cfg.getPort().setPut(54321);
+        cfg.getPort().setQuery(54322);
+        cfg.getPort().setWebsocket(54323);
+        cfg.setZookeepers("localhost:2181");
+        cfg.setInstanceName("test");
+        cfg.setUsername("root");
+        cfg.setPassword("secret");
+        cfg.getHttp().setHost("localhost");
+        cfg.getSsl().setUseGeneratedKeypair(true);
+        cfg.getWrite().setLatency("2s");
+        cfg.getWebSocket().setTimeout(20);
         return cfg;
     }
 

@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.apache.accumulo.core.security.ColumnVisibility;
 import timely.Configuration;
+import timely.TimelyConfiguration;
 
 import java.util.concurrent.TimeUnit;
 
@@ -22,11 +23,11 @@ public class VisibilityCache {
         }
     }
 
-    public static synchronized void init(Configuration config) {
+    public static synchronized void init(TimelyConfiguration config) {
         if (CACHE == null) {
-            long expireMinutes = Long.parseLong(config.get(Configuration.VISIBILITY_CACHE_EXPIRATION));
-            int initialCapacity = Integer.parseInt(config.get(Configuration.VISIBILITY_CACHE_INITIAL_CAPACITY));
-            long maxCapacity = Long.parseLong(config.get(Configuration.VISIBILITY_CACHE_MAX_CAPACITY));
+            long expireMinutes = config.getVisibilityCache().getExpirationMinutes();
+            int initialCapacity = config.getVisibilityCache().getInitialCapacity();
+            long maxCapacity = config.getVisibilityCache().getMaxCapacity();
             CACHE = Caffeine.newBuilder().expireAfterAccess(expireMinutes, TimeUnit.MINUTES)
                     .initialCapacity(initialCapacity).maximumSize(maxCapacity).build();
         }

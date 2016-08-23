@@ -2,6 +2,7 @@ package timely.netty.http.auth;
 
 import io.netty.channel.ChannelHandlerContext;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,7 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
 @Scope(SCOPE_PROTOTYPE)
 public class BasicAuthLoginRequestHandler extends TimelyLoginRequestHandler<BasicAuthLoginRequest> {
 
+    @Autowired
     public BasicAuthLoginRequestHandler(TimelyConfiguration conf) {
         super(conf);
     }

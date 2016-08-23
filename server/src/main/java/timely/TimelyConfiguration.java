@@ -454,7 +454,7 @@ public class TimelyConfiguration {
     public static class VisibilityCache {
 
         private long expirationMinutes = 60;
-        private long initialCapacity = 2000;
+        private int initialCapacity = 2000;
         private long maxCapacity = 10000;
 
         public long getExpirationMinutes() {
@@ -465,11 +465,11 @@ public class TimelyConfiguration {
             this.expirationMinutes = expirationMinutes;
         }
 
-        public long getInitialCapacity() {
+        public int getInitialCapacity() {
             return initialCapacity;
         }
 
-        public void setInitialCapacity(long initialCapacity) {
+        public void setInitialCapacity(int initialCapacity) {
             this.initialCapacity = initialCapacity;
         }
 

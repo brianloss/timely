@@ -20,7 +20,6 @@ import javax.net.ssl.SSLSocketFactory;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.minicluster.MiniAccumuloCluster;
 import org.apache.accumulo.minicluster.MiniAccumuloConfig;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,7 +28,6 @@ import org.junit.ClassRule;
 import org.junit.rules.TemporaryFolder;
 
 import timely.Configuration;
-import timely.auth.AuthCache;
 import timely.test.TestConfiguration;
 
 /**
@@ -117,10 +115,4 @@ public class OneWaySSLBase extends QueryBase {
             }
         });
     }
-
-    @After
-    public void tearDown() throws Exception {
-        AuthCache.resetSessionMaxAge();
-    }
-
 }

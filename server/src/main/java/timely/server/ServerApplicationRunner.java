@@ -25,6 +25,7 @@ import timely.Server;
 import timely.TimelyConfiguration;
 import timely.api.response.TimelyException;
 import timely.auth.AuthCache;
+import timely.auth.VisibilityCache;
 import timely.netty.websocket.WebSocketRequestDecoder;
 import timely.store.DataStore;
 
@@ -63,6 +64,7 @@ public class ServerApplicationRunner implements ApplicationRunner, ApplicationLi
     @Override
     public void run(ApplicationArguments args) throws Exception {
         AuthCache.setSessionMaxAge(config);
+        VisibilityCache.init(config);
 
         final boolean useEpoll = useEpoll();
         Class<? extends ServerSocketChannel> channelClass;
