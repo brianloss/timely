@@ -34,12 +34,12 @@ timely:
     initial-capacity: 2000
     max-capacity: 10000
   ssl:
-#    certificate-file: /Users/bfloss/Projects/timely/server/bin/docker/grafana/pki/timely-cert.pem
-#    key-file: /Users/bfloss/Projects/timely/server/bin/docker/grafana/pki/timely-pkcs8-key.pem
-    key-pass: timely
-    use-generated-keypair: true
-#    trust-store-file: /Users/bfloss/Projects/timely/server/bin/docker/grafana/pki/timely-ca.pem
-    use-openssl: true
+    certificate-file: /Users/bfloss/Projects/pki/timely.crt
+    key-file: /Users/bfloss/Projects/pki/timely-pkcs8.key
+    key-password: timely
+    use-generated-keypair: false
+    trust-store-file: /Users/bfloss/Projects/pki/CA.pem
+    use-openssl: false
   session-max-age: 86400
   allow-anonymous-access: true
   websocket:

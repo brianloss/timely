@@ -36,11 +36,11 @@ timely:
   ssl:
     certificate-file:
     key-file:
-    key-pass:
+    key-password:
     use-generated-keypair: false
     trust-store-file:
     use-openssl: true
-    use-ciphers:
+#    use-ciphers:
   session-max-age: 86400
   allow-anonymous-access: false
   websocket:

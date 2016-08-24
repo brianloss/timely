@@ -11,10 +11,8 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 import java.io.File;
 import java.net.URL;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.accumulo.core.client.Connector;
@@ -27,9 +25,6 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.rules.TemporaryFolder;
 
-import timely.Configuration;
-import timely.test.TestConfiguration;
-
 /**
  * Base test class for SSL with anonymous access
  */
@@ -39,8 +34,7 @@ public class OneWaySSLBase extends QueryBase {
     @ClassRule
     public static final TemporaryFolder temp = new TemporaryFolder();
 
-    private static MiniAccumuloCluster mac = null;
-    protected static File conf = null;
+    protected static MiniAccumuloCluster mac = null;
     private static File clientTrustStoreFile = null;
 
     protected SSLSocketFactory getSSLSocketFactory() throws Exception {
@@ -55,14 +49,14 @@ public class OneWaySSLBase extends QueryBase {
         return jdkSslContext.getSocketFactory();
     }
 
-    protected static void setupSSL(TestConfiguration config) throws Exception {
+    protected static void setupSSL() throws Exception {
         SelfSignedCertificate serverCert = new SelfSignedCertificate();
-        config.put(Configuration.SSL_CERTIFICATE_FILE, serverCert.certificate().getAbsolutePath());
         clientTrustStoreFile = serverCert.certificate().getAbsoluteFile();
-        config.put(Configuration.SSL_PRIVATE_KEY_FILE, serverCert.privateKey().getAbsolutePath());
-        config.put(Configuration.SSL_USE_OPENSSL, "false");
-        config.put(Configuration.SSL_USE_GENERATED_KEYPAIR, "false");
-        config.put(Configuration.ALLOW_ANONYMOUS_ACCESS, "true");
+        System.setProperty("timely.ssl.certificate-file", serverCert.certificate().getAbsolutePath());
+        System.setProperty("timely.ssl.key-file", serverCert.privateKey().getAbsolutePath());
+        System.setProperty("timely.ssl.use-openssl", "false");
+        System.setProperty("timely.ssl.use-generated-keypair", "false");
+        System.setProperty("timely.allow-anonymous-access", "true");
     }
 
     @Override
@@ -74,28 +68,29 @@ public class OneWaySSLBase extends QueryBase {
     protected HttpsURLConnection getUrlConnection(URL url) throws Exception {
         HttpsURLConnection.setDefaultSSLSocketFactory(getSSLSocketFactory());
         HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-        con.setHostnameVerifier(new HostnameVerifier() {
-
-            @Override
-            public boolean verify(String arg0, SSLSession arg1) {
-                return true;
-            }
-        });
+        con.setHostnameVerifier((host, session) -> true);
         return con;
     }
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        temp.create();
         final MiniAccumuloConfig macConfig = new MiniAccumuloConfig(temp.newFolder("mac"), "secret");
         mac = new MiniAccumuloCluster(macConfig);
         mac.start();
-        conf = temp.newFile("config.properties");
-        TestConfiguration config = TestConfiguration.createMinimalConfigurationForTest();
-        config.put(Configuration.INSTANCE_NAME, mac.getInstanceName());
-        config.put(Configuration.ZOOKEEPERS, mac.getZooKeepers());
-        setupSSL(config);
-        config.toConfiguration(conf);
+
+        System.setProperty("timely.ip", "127.0.0.1");
+        System.setProperty("timely.port.put", "54321");
+        System.setProperty("timely.port.query", "54322");
+        System.setProperty("timely.port.websocket", "54323");
+        System.setProperty("timely.instance-name", mac.getInstanceName());
+        System.setProperty("timely.zookeepers", mac.getZooKeepers());
+        System.setProperty("timely.username", "root");
+        System.setProperty("timely.password", "secret");
+        System.setProperty("timely.http.host", "localhost");
+        System.setProperty("timely.write.latency", "2s");
+        System.setProperty("timely.websocket.timeout", "20");
+
+        setupSSL();
     }
 
     @AfterClass
@@ -109,7 +104,7 @@ public class OneWaySSLBase extends QueryBase {
         con.tableOperations().list().forEach(t -> {
             if (t.startsWith("timely")) {
                 try {
-                    con.tableOperations().delete(t);
+                    con.tableOperations().deleteRows(t, null, null);
                 } catch (Exception e) {
                 }
             }
